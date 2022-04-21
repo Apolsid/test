@@ -1,0 +1,70 @@
+﻿<Page x:Class="test.List"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      xmlns:local="clr-namespace:test"
+      mc:Ignorable="d" 
+      d:DesignHeight="300" d:DesignWidth="800"
+      Title="List">
+
+    <Grid>
+        <StackPanel>
+            <DataGrid Name="TaskList" ItemsSource="{Binding Tasks}" AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True" RowHeight="40" Height="150" VerticalAlignment="Top">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="UserName" Binding="{Binding UserName}" Width="130" IsReadOnly="True">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="TextBlock.TextWrapping" Value="Wrap" />
+                                <Setter Property="TextBlock.TextAlignment" Value="Center" />
+                                <Setter Property="TextBlock.VerticalAlignment" Value="Center" />
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+                    <DataGridTextColumn Header="Email" Binding="{Binding Email}" Width="190"  IsReadOnly="True">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="TextBlock.TextWrapping" Value="Wrap" />
+                                <Setter Property="TextBlock.TextAlignment" Value="Center" />
+                                <Setter Property="TextBlock.VerticalAlignment" Value="Center" />
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+                    <DataGridTextColumn Header="Text" Binding="{Binding Text}" Width="350">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="TextBlock.TextWrapping" Value="Wrap" />
+                                <Setter Property="TextBlock.VerticalAlignment" Value="Center" />
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+                    <DataGridCheckBoxColumn Header="Ready"  Width="50"  Binding="{Binding IsReady}" />
+                    <DataGridCheckBoxColumn Header="Adm"  Width="50" Binding="{Binding IsAdm}" IsReadOnly="True" />
+                </DataGrid.Columns>
+            </DataGrid>
+            <StackPanel Orientation="Horizontal" Margin="10" Name="PagesControl" HorizontalAlignment="Center">
+                <Button Name="BtnPrev" Content="Назад" Width="60"></Button>
+                <Label Name="PageLabel" Margin="10 0 10 0" Content="- из -" />
+                <Button Name="BtnNext" Content="Вперед" Width="60"></Button>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="10">
+                <StackPanel>
+                    <Label Content="Имя"/>
+                    <TextBox Name="NewUserName" Width="100" HorizontalAlignment="Left"/>
+                </StackPanel>
+                <StackPanel Margin="10 0 0 0">
+                    <Label Content="Email"/>
+                    <TextBox Name="NewEmail" Width="200" HorizontalAlignment="Left"/>
+                </StackPanel>
+                <StackPanel Margin="10 0 0 0">
+                    <Label Content="Текс"/>
+                    <TextBox Name="NewText" Width="350" HorizontalAlignment="Left"/>
+                </StackPanel>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="10">
+                <Button Name="BtnCreate" Content="Создать" Width="100" HorizontalAlignment="Left"></Button>
+                <Label Name="CreateStatus" Margin="10 0 0 0" HorizontalAlignment="Left" Foreground="red"/>
+            </StackPanel>
+        </StackPanel>
+    </Grid>
+</Page>
