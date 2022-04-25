@@ -16,18 +16,15 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.ComponentModel;
+using System.Threading;
 
 namespace test
 {
 
-    /// <summary>
-    /// Interaction logic for MainWindow.xaml
-    /// </summary>
     public partial class MainWindow : Window
     {
 
         private Boolean IsLogin = false;
-        public List<Task> Tasks = new List<Task>();
 
         private static readonly HttpClient client = new HttpClient();
 
@@ -44,7 +41,7 @@ namespace test
         private double MaxRow = 3.0;
 
 
-
+        private Timer _timer;
 
         private Login Tab_Login = new Login();
         private List Tab_List = new List();
@@ -70,8 +67,6 @@ namespace test
             Tab_List.BtnPrev.Click += OnPrev;
             Tab_List.BtnNext.Click += OnNext;
 
-            //Tab_List.TaskList.RowEditEnding += OnCellEditLogin;
-
             DataContext = this;
 
             Frame.Content = Tab_List;
@@ -80,12 +75,44 @@ namespace test
         }
 
 
-        /*  private void OnCellEditLogin(object? sender, DataGridRowEditEndingEventArgs e)
-          {
-              var a = sender;
-              var b = e;
-          }*/
+        void UpdateTask(object sender, PropertyChangedEventArgs e)
+        {
+            Task item = (Task)sender;
 
+            if(e.PropertyName == "Text")
+            {
+                item.IsAdm = true;
+            }
+
+            UpdateTask(item);
+        }
+
+        async private void UpdateTask(Task item)
+        {
+            var values = new Dictionary<string, string>{
+                { "token", Token },
+                { "text", item.Text },
+                { "status", item.Status.ToString() }
+            };
+
+            var content = new FormUrlEncodedContent(values);
+
+            var response = await client.PostAsync(String.Format(base_url + "/edit/{0}?developer=" + developer_key, item.Id), content);
+            var responseString = await response.Content.ReadAsStringAsync();
+
+            Response_EditTask result = JsonSerializer.Deserialize<Response_EditTask>(responseString);
+
+            if (result.Status == "ok")
+            {
+                ShowStasut(false, "Успешно отредактировано");
+            }
+            else
+            {
+                ShowStasut(true, result.Message.Token);
+            }
+
+            UpdateTasks();
+        }
 
 
 
@@ -110,11 +137,14 @@ namespace test
             var response = await client.GetStringAsync(base_url + param);
             Response_Tasks result = JsonSerializer.Deserialize<Response_Tasks>(response);
 
-            Tasks = result.Message.Tasks;
+            var ItemsSource = result.Message.Tasks;
             Pages = (int)Math.Ceiling(int.Parse(result.Message.TotalTaskCount) / MaxRow);
 
             Tab_List.TaskList.ItemsSource = null;
-            Tab_List.TaskList.ItemsSource = Tasks;
+            Tab_List.TaskList.ItemsSource = ItemsSource;
+
+            ItemsSource.ForEach(t => t.PropertyChanged += UpdateTask );
+
             UpdatePages();
         }
 
@@ -223,8 +253,7 @@ namespace test
 
             if (result.Status == "ok")
             {
-                Tab_List.CreateStatus.Content = "Успешно добавлено";
-                Tab_List.CreateStatus.Foreground = new System.Windows.Media.SolidColorBrush(Colors.Green);
+                ShowStasut(false, "Успешно добавлено");
 
                 UpdateTasks();
             }
@@ -234,9 +263,27 @@ namespace test
 
                 var a = !String.IsNullOrEmpty(ms.Email) ? result.Message.Email :
                                                           String.IsNullOrEmpty(ms.Text) ? ms.UserName : result.Message.Text;
-                Tab_List.CreateStatus.Content = a;
-                Tab_List.CreateStatus.Foreground = new System.Windows.Media.SolidColorBrush(Colors.Red);
+                ShowStasut(true, a);
             }
+        }
+
+
+        private void ShowStasut (bool isAlarm, string msg)
+        {
+            Tab_List.CreateStatus.Foreground = new System.Windows.Media.SolidColorBrush(isAlarm ? Colors.Red : Colors.Green);
+            Tab_List.CreateStatus.Content = msg;
+
+            if (_timer != null)
+            {
+                _timer.Dispose();
+            }
+            
+            _timer = new Timer( state => {
+                Dispatcher.BeginInvoke(new ThreadStart(delegate { Tab_List.CreateStatus.Content = ""; }));
+
+                _timer.Dispose();
+                _timer = null;
+            }, null, 3000, 0);
         }
 
 
@@ -292,6 +339,22 @@ namespace test
         }
     }
 
+    public class Response_EditTask
+    {
+        [JsonPropertyName("status")]
+        public string Status { get; set; }
+
+        [JsonPropertyName("message")]
+        public Response_Message Message { get; set; }
+
+
+
+        public class Response_Message
+        {
+            [JsonPropertyName("token")]
+            public string Token { get; set; }
+        }
+    }
 
     public class Response_Token
     {
@@ -344,8 +407,25 @@ namespace test
         }
     }
 
-    public class Task
+    public class Task : INotifyPropertyChanged
     {
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        protected void OnPropertyChanged(PropertyChangedEventArgs e)
+        {
+            PropertyChangedEventHandler handler = PropertyChanged;
+            if (handler != null)
+                handler(this, e);
+        }
+
+        protected void OnPropertyChanged(string propertyName)
+        {
+            OnPropertyChanged(new PropertyChangedEventArgs(propertyName));
+        }
+
+
+
+
         [JsonConstructor]
         public Task(int id, string username, string email, string text, int status)
         {
@@ -366,6 +446,22 @@ namespace test
         }
 
 
+        public void SetIsAdm(bool IsAdm)
+        {
+            this.Status = (this.IsReady ? 10 : 0) + (IsAdm ? 1 : 0);
+        }
+        public void SetIsReady(bool IsReady)
+        {
+            this.Status = (IsReady ? 10 : 0) + (this.IsAdm ? 1 : 0);
+        }
+
+
+
+
+
+        private string text;
+
+
         [JsonPropertyName("id")]
         public int Id { get; set; }
 
@@ -376,7 +472,17 @@ namespace test
         public string Email { get; set; }
 
         [JsonPropertyName("text")]
-        public string Text { get; set; }
+        public string Text {
+            get
+            {
+                return this.text;
+            }
+            set
+            {
+                this.text = value;
+                OnPropertyChanged("Text");
+            }
+        }
 
         [JsonPropertyName("status")]
         public int Status { get; set; }
@@ -402,6 +508,7 @@ namespace test
             set
             {
                 Status = (Status % 10 == 1 ? 1 : 0) + (value ? 10 : 0);
+                OnPropertyChanged("IsReady");
             }
         }
 

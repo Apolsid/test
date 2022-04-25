@@ -9,14 +9,14 @@
       Title="Login">
 
     <Grid>
-        <StackPanel>
+        <StackPanel HorizontalAlignment="Center">
             <Label Content="Имя" Margin="10 10 10 0" />
-            <TextBox Name="username" Margin="10 0 10 0" Width="200" HorizontalAlignment="Left"/>
+            <TextBox Name="username" Margin="10 0 10 0" Width="200" HorizontalAlignment="Left" />
             
-            <Label Content="Пароль" Margin="10 15 10 0" />
+            <Label Content="Пароль" Margin="10 10 10 0" />
             <TextBox Name="password" Margin="10 0 10 0" Width="200" HorizontalAlignment="Left"/>
             
-            <Button Name="BtnLogin" Content="Войти" Margin="10 50 10 0" Width="200" HorizontalAlignment="Left"/>
+            <Button Name="BtnLogin" Content="Войти" Margin="10 30 10 0" Width="200" HorizontalAlignment="Left"/>
 
             <Label Name="status" Margin="20" HorizontalAlignment="Left" Foreground="red"/>
         </StackPanel>
